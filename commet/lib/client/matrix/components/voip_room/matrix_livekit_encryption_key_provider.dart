@@ -248,19 +248,7 @@ class MatrixLivekitEncryptionKeyProvider implements BaseKeyProvider {
         continue;
       }
 
-      var application = state.content["application"];
-      var callid = state.content["call_id"];
-
-      if (application != "m.call") {
-        Log.w(
-            "Received membership state change for invalid application, not sending key");
-      }
-
-      if (callid != "") {
-        Log.w(
-            "Received membership state change for invalid call id, not sending key");
-        continue;
-      }
+      if (!shouldSendKeysFor(state.content)) continue;
 
       Log.i("Someone joined the call");
 
@@ -274,5 +262,35 @@ class MatrixLivekitEncryptionKeyProvider implements BaseKeyProvider {
         rotateKeys();
       });
     }
+  }
+
+  /// Whether we owe encryption keys to the sender of [content], a
+  /// `msc3401.call.member` membership state event.
+  ///
+  /// Two membership formats have to be accepted:
+  ///  * room scoped memberships, which carry an empty `call_id`
+  ///  * session scoped memberships, which identify the session with
+  ///    `session_id` and omit `call_id` altogether
+  ///
+  /// Anything else belongs to another application or to a call that is not
+  /// scoped to this room, so it is not ours to serve keys for. Getting this
+  /// backwards fails silently: the newcomer never receives a key and its
+  /// media arrives undecryptable with no error anywhere.
+  static bool shouldSendKeysFor(Map<String, dynamic> content) {
+    if (content["application"] != "m.call") {
+      Log.w(
+          "Received membership state change for invalid application, not sending key");
+      return false;
+    }
+
+    final callId = content["call_id"];
+
+    if (callId != null && callId != "") {
+      Log.w(
+          "Received membership state change for invalid call id, not sending key");
+      return false;
+    }
+
+    return true;
   }
 }

@@ -9,6 +9,35 @@ env:
   PROJECT_PATH: commet
 
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.8.0
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+
+      - name: Code Generation
+        run: |
+          cd $PROJECT_PATH
+          dart run scripts/codegen.dart
+
+      - name: Unit Tests
+        run: |
+          cd $PROJECT_PATH
+          flutter test unit_test
+
+      - name: Analyze
+        run: |
+          cd $PROJECT_PATH
+          flutter analyze lib/client/matrix/components/voip_room unit_test integration_test
+
   build-windows:
     runs-on: windows-2022
     steps:
@@ -220,12 +249,21 @@ jobs:
       - name: Setup Tools
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y ninja-build libgtk-3-dev libmpv-dev mpv ffmpeg
+          sudo apt-get install -y ninja-build libgtk-3-dev libmpv-dev mpv ffmpeg webkit2gtk-4.1
         
       - name: Code Generation
         run: |
           cd $PROJECT_PATH
           dart run scripts/codegen.dart
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1
+      - run: rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+
+      - name: Prepare web
+        run: |
+          cd $PROJECT_PATH
+          ./scripts/prepare-web.sh
 
       - name: Build Web
         run: |

@@ -59,12 +59,36 @@ class MatrixLivekitBackend {
       return null;
     }
 
-    final values = states.values.map((event) => event as Event).toList();
-    values.sort((a, b) => a.originServerTs.compareTo(b.originServerTs));
+    return selectFocus(
+      [
+        for (final state in states.values)
+          (
+            originServerTs:
+                (state as Event).originServerTs.millisecondsSinceEpoch,
+            content: state.content as Map<String, dynamic>,
+          ),
+      ],
+      room.identifier,
+    );
+  }
 
-    for (var entry in values) {
+  /// Applies the `oldest_membership` focus selection algorithm: memberships
+  /// are considered oldest first, and the focus we settle on is the first
+  /// livekit focus advertised by an existing member that also points at this
+  /// room's livekit alias.
+  ///
+  /// Every member runs this over the same state, so all clients converge on
+  /// one focus. A disagreement here is not loud: the client that picked a
+  /// different SFU simply never sees the other participants' media.
+  static Uri? selectFocus(
+      List<({int originServerTs, Map<String, dynamic> content})> memberships,
+      String livekitAlias) {
+    final ordered = [...memberships]
+      ..sort((a, b) => a.originServerTs.compareTo(b.originServerTs));
+
+    for (var membership in ordered) {
       final focusActive =
-          entry.content.tryGet<Map<String, dynamic>>("focus_active");
+          membership.content.tryGet<Map<String, dynamic>>("focus_active");
 
       if (focusActive == null) {
         continue;
@@ -82,8 +106,7 @@ class MatrixLivekitBackend {
       }
 
       final fociPreferred =
-          entry.content.tryGet<List<dynamic>>("foci_preferred");
-      Log.e("Selecting focus");
+          membership.content.tryGet<List<dynamic>>("foci_preferred");
       if (fociPreferred == null) {
         continue;
       }
@@ -91,7 +114,7 @@ class MatrixLivekitBackend {
       for (var item in fociPreferred) {
         final map = item as Map<String, dynamic>;
         if (map['type'] != "livekit") continue;
-        if (map['livekit_alias'] != room.identifier) continue;
+        if (map['livekit_alias'] != livekitAlias) continue;
         return Uri.parse(map['livekit_service_url']);
       }
     }

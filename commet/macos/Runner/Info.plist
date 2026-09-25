@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Commet uses the camera so other people in your call can see you.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Commet uses the microphone so other people in your call can hear you.</string>
 </dict>
 </plist>
