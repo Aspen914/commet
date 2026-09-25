@@ -1,0 +1,26 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=Commet
+Comment=Your space to connect!
+Categories=Network;InstantMessaging;Chat;
+Icon=commet-desktop
+Exec=commet %U
+Terminal=false
+StartupWMClass=chat.commet.commetapp
+StartupNotify=false
+MimeType=x-scheme-handler/commetchat;
+Actions=ToggleMute;Mute;Unmute
+
+[Desktop Action ToggleMute]
+Name=Toggle Mute
+Exec=commet --shortcut toggle_mute
+X-KDE-Shortcuts=Alt+M
+
+[Desktop Action Mute]
+Name=Mute
+Exec=commet --shortcut mute
+
+[Desktop Action Unmute]
+Name=Unmute
+Exec=commet --shortcut unmute
