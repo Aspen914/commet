@@ -390,6 +390,7 @@ jobs:
           cd $PROJECT_PATH/linux/flatpak
           sed -i "s/{{VERSION_TAG}}/$version/g" ./chat.commet.commetapp.desktop
           sed -i "s/{{VERSION_TAG}}/$version/g" ./chat.commet.commetapp.metainfo.xml
+          sed -i "s/{{RELEASE_DATE}}/$(date -u +%Y-%m-%d)/g" ./chat.commet.commetapp.metainfo.xml
           flatpak-builder --force-clean build-dir chat.commet.commetapp.yaml --repo=repo
           flatpak build-bundle repo chat.commet.commetapp.flatpak chat.commet.commetapp
       

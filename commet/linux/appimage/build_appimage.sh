@@ -34,6 +34,10 @@ ARCH="${ARCH:-$(uname -m)}"
 
 BUNDLE_DIR="${BUNDLE_DIR:-${ROOT_DIR}/build/linux/x64/release/bundle}"
 VERSION="latest"
+# AppStream validation rejects a <release> element with no date, so the
+# metainfo template carries a {{RELEASE_DATE}} placeholder. Override
+# RELEASE_DATE to keep builds byte-for-byte reproducible.
+RELEASE_DATE="${RELEASE_DATE:-$(date -u +%Y-%m-%d)}"
 OUTPUT=""
 USE_GTK_PLUGIN=1
 KEEP_WORK=0
@@ -193,6 +197,8 @@ assemble_appdir() {
   install -Dm644 "${ROOT_DIR}/linux/flatpak/${APPID}.metainfo.xml" \
     "${APPDIR}/usr/share/metainfo/${APPID}.appdata.xml"
   sed -i "s|{{VERSION_TAG}}|${VERSION}|g" \
+    "${APPDIR}/usr/share/metainfo/${APPID}.appdata.xml"
+  sed -i "s|{{RELEASE_DATE}}|${RELEASE_DATE}|g" \
     "${APPDIR}/usr/share/metainfo/${APPID}.appdata.xml"
 }
 
